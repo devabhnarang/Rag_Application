@@ -3,6 +3,8 @@ from sentence_transformers import SentenceTransformer
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from openai import OpenAI
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 import csv
 import os
@@ -12,13 +14,13 @@ import tempfile
 import faiss
 import numpy as np
 import PyPDF2
+import requests
 
 
 load_dotenv()
 
 app = Flask(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "data_rag_uploads")
 INDEX_FOLDER = os.path.join(tempfile.gettempdir(), "data_rag_store")
 
@@ -63,7 +65,7 @@ Answer:
 """
 
 INSIGHT_PROMPT = """
-You are analyzing a real document written by humans.
+You are analyzing real content provided by the user.
 
 Use the context below and apply logical reasoning.
 You may infer and connect ideas, but do not invent numbers or facts.
@@ -83,6 +85,11 @@ Answer:
 
 def is_allowed_file(filename):
     return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def is_valid_url(url):
+    parsed = urlparse(url)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
 def detect_intent(question):
@@ -139,6 +146,30 @@ def load_txt(path):
         return file.read()
 
 
+def load_url(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; SmartRAGBot/1.0)"
+    }
+
+    response = requests.get(url, headers=headers, timeout=15)
+    response.raise_for_status()
+
+    content_type = response.headers.get("Content-Type", "").lower()
+
+    if "text/html" not in content_type and "text/plain" not in content_type:
+        raise ValueError("This link does not appear to contain readable webpage text.")
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    for tag in soup(["script", "style", "nav", "footer", "header", "noscript", "form"]):
+        tag.decompose()
+
+    text = soup.get_text(separator=" ")
+    text = " ".join(text.split())
+
+    return text
+
+
 def save_index(index, documents):
     faiss.write_index(index, os.path.join(INDEX_FOLDER, "index.faiss"))
 
@@ -159,6 +190,21 @@ def load_index():
         documents = pickle.load(file)
 
     return index, documents
+
+
+def build_index_from_text(raw_text):
+    documents = chunk_text(raw_text)
+
+    if not documents:
+        raise ValueError("The content is too small or could not be chunked properly.")
+
+    embeddings = embedder.encode(documents, normalize_embeddings=True)
+    embeddings = np.array(embeddings).astype("float32")
+
+    index = faiss.IndexFlatIP(embeddings.shape[1])
+    index.add(embeddings)
+
+    save_index(index, documents)
 
 
 @app.route("/", methods=["GET"])
@@ -214,24 +260,7 @@ def upload():
                 error="No readable text was found in the document."
             )
 
-        documents = chunk_text(raw_text)
-
-        if not documents:
-            return render_template(
-                "index.html",
-                indexed=False,
-                uploaded=False,
-                answer=None,
-                error="The document is too small or could not be chunked properly."
-            )
-
-        embeddings = embedder.encode(documents, normalize_embeddings=True)
-        embeddings = np.array(embeddings).astype("float32")
-
-        index = faiss.IndexFlatIP(embeddings.shape[1])
-        index.add(embeddings)
-
-        save_index(index, documents)
+        build_index_from_text(raw_text)
 
         return redirect(url_for("home", uploaded=1))
 
@@ -245,6 +274,48 @@ def upload():
         )
 
 
+@app.route("/link", methods=["POST"])
+def link():
+    url = request.form.get("url", "").strip()
+
+    if not url:
+        return redirect(url_for("home"))
+
+    if not is_valid_url(url):
+        return render_template(
+            "index.html",
+            indexed=False,
+            uploaded=False,
+            answer=None,
+            error="Please enter a valid http or https URL."
+        )
+
+    try:
+        raw_text = load_url(url)
+
+        if not raw_text.strip():
+            return render_template(
+                "index.html",
+                indexed=False,
+                uploaded=False,
+                answer=None,
+                error="No readable text was found at this link."
+            )
+
+        build_index_from_text(raw_text)
+
+        return redirect(url_for("home", uploaded=1))
+
+    except Exception as error:
+        return render_template(
+            "index.html",
+            indexed=False,
+            uploaded=False,
+            answer=None,
+            error=f"Failed to read link: {str(error)}"
+        )
+
+
 @app.route("/ask", methods=["POST"])
 def ask():
     index, documents = load_index()
@@ -255,7 +326,7 @@ def ask():
             indexed=False,
             uploaded=False,
             answer=None,
-            error="Please upload a document first."
+            error="Please upload a document or index a link first."
         )
 
     query = request.form.get("query", "").strip()
