@@ -61,6 +61,37 @@
             line-height: 1.7;
         }
 
+        .hero-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .hero-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 6px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .hero-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-links svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
         .main {
             width: 100%;
             max-width: 1040px;
@@ -139,7 +170,8 @@
         }
 
         input[type="file"],
-        input[type="text"] {
+        input[type="text"],
+        input[type="url"] {
             width: 100%;
             min-height: 46px;
             border: 1px solid #cbd5e1;
@@ -154,12 +186,14 @@
             padding: 10px;
         }
 
-        input[type="text"] {
+        input[type="text"],
+        input[type="url"] {
             padding: 0 14px;
         }
 
         input[type="file"]:focus,
-        input[type="text"]:focus {
+        input[type="text"]:focus,
+        input[type="url"]:focus {
             border-color: #2563eb;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
         }
@@ -185,11 +219,6 @@
 
         button:hover {
             background: #1d4ed8;
-        }
-
-        button:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
         }
 
         .danger {
@@ -268,6 +297,39 @@
             font-size: 14px;
         }
 
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+        }
+
         @media (max-width: 820px) {
             .hero {
                 padding-top: 42px;
@@ -308,6 +370,11 @@
             button {
                 width: 100%;
             }
+
+            .hero-links a {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -319,8 +386,24 @@
                 <span class="badge">Flask · FAISS · SentenceTransformers · Groq</span>
                 <h1>Smart RAG Document Q&A</h1>
                 <p>
-                    Upload a document, create a semantic vector index, and ask questions that are answered from the document context.
+                    Upload documents or index public webpages, then ask questions answered from retrieved context.
                 </p>
+
+                <div class="hero-links">
+                    <a href="https://www.linkedin.com/in/devabh/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.32 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.1 20.45H3.54V9H7.1v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"></path>
+                        </svg>
+                        LinkedIn
+                    </a>
+
+                    <a href="https://github.com/devabhnarang/" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.16c-3.2.7-3.87-1.36-3.87-1.36-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18A10.95 10.95 0 0 1 12 6.03c.97 0 1.95.13 2.87.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.77 1.06.77 2.14v3.16c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"></path>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -345,7 +428,7 @@
                     </form>
 
                     {% if uploaded %}
-                        <div class="message success">Document indexed successfully. You can now ask questions.</div>
+                        <div class="message success">Content indexed successfully. You can now ask questions.</div>
                     {% endif %}
 
                     {% if error %}
@@ -356,14 +439,36 @@
                 <div class="panel">
                     <div class="panel-header">
                         <div>
+                            <h2>Read From Link</h2>
+                            <p class="hint">Paste a public webpage URL and index its readable text.</p>
+                        </div>
+                    </div>
+
+                    <form action="/link" method="post">
+                        <input
+                            type="url"
+                            name="url"
+                            placeholder="https://example.com/article"
+                            required
+                        >
+
+                        <div class="actions">
+                            <button type="submit">Index Link</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel panel-wide">
+                    <div class="panel-header">
+                        <div>
                             <h2>Ask a Question</h2>
-                            <p class="hint">Queries are matched against the most relevant document chunks.</p>
+                            <p class="hint">Queries are matched against the most relevant indexed chunks.</p>
                         </div>
 
                         {% if indexed %}
                             <span class="status-pill status-ready">Ready</span>
                         {% else %}
-                            <span class="status-pill status-empty">No document</span>
+                            <span class="status-pill status-empty">No content</span>
                         {% endif %}
                     </div>
 
@@ -372,7 +477,7 @@
                             <input
                                 type="text"
                                 name="query"
-                                placeholder="Example: What are the key findings in this document?"
+                                placeholder="Example: What are the key findings in this content?"
                                 required
                             >
 
@@ -381,7 +486,7 @@
                             </div>
                         </form>
                     {% else %}
-                        <div class="message error">Upload and index a document before asking questions.</div>
+                        <div class="message error">Upload a document or index a link before asking questions.</div>
                     {% endif %}
                 </div>
 
@@ -390,7 +495,7 @@
                         <div class="panel-header">
                             <div>
                                 <h2>Answer</h2>
-                                <p class="hint">Generated using retrieved context from your document.</p>
+                                <p class="hint">Generated using retrieved context from your indexed content.</p>
                             </div>
                         </div>
 
@@ -402,19 +507,19 @@
                     <div class="panel-header">
                         <div>
                             <h2>System Overview</h2>
-                            <p class="hint">A simple end-to-end RAG pipeline built for document question answering.</p>
+                            <p class="hint">An end-to-end RAG pipeline for documents and webpage content.</p>
                         </div>
                     </div>
 
                     <div class="features">
                         <div class="feature">
                             <strong>Ingestion</strong>
-                            <span>Reads TXT, PDF, and CSV content from uploaded files.</span>
+                            <span>Reads TXT, PDF, CSV, and public webpage text.</span>
                         </div>
 
                         <div class="feature">
                             <strong>Chunking</strong>
-                            <span>Splits long documents into searchable text sections.</span>
+                            <span>Splits long content into searchable text sections.</span>
                         </div>
 
                         <div class="feature">
@@ -433,19 +538,39 @@
                     <div class="panel-header">
                         <div>
                             <h2>Reset Workspace</h2>
-                            <p class="hint">Clear the current document index and upload a new file.</p>
+                            <p class="hint">Clear the current index and add new content.</p>
                         </div>
                     </div>
 
                     <form action="/reset" method="post">
-                        <button class="danger" type="submit">Clear Current Document</button>
+                        <button class="danger" type="submit">Clear Current Content</button>
                     </form>
                 </div>
             </section>
         </main>
 
         <footer class="footer">
-            Built with Flask, FAISS, SentenceTransformers, and Groq API.
+            <div class="footer-inner">
+                <span>
+                    Built with Flask, FAISS, SentenceTransformers, BeautifulSoup, and Groq API.
+                </span>
+
+                <div class="footer-links">
+                    <a href="https://www.linkedin.com/in/devabh/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.32 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.1 20.45H3.54V9H7.1v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"></path>
+                        </svg>
+                        LinkedIn
+                    </a>
+
+                    <a href="https://github.com/devabhnarang/" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.16c-3.2.7-3.87-1.36-3.87-1.36-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18A10.95 10.95 0 0 1 12 6.03c.97 0 1.95.13 2.87.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.77 1.06.77 2.14v3.16c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"></path>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
         </footer>
     </div>
 </body>
