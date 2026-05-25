@@ -7,3 +7,5 @@ openai
 python-dotenv
 PyPDF2
 werkzeug
+requests
+beautifulsoup4
