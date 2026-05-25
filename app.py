@@ -34,18 +34,10 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE_MB * 1024 * 1024
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(INDEX_FOLDER, exist_ok=True)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-if not GROQ_API_KEY:
-    raise RuntimeError("GROQ_API_KEY is not set. Add it to your environment variables.")
-
-client = OpenAI(
-    api_key=GROQ_API_KEY,
-    base_url="https://api.groq.com/openai/v1"
-)
-
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
+embedder = None
+client = None
 
 
 FACT_PROMPT = """
@@ -81,6 +73,32 @@ Question:
 
 Answer:
 """
+
+
+def get_embedder():
+    global embedder
+
+    if embedder is None:
+        embedder = SentenceTransformer("all-MiniLM-L6-v2")
+
+    return embedder
+
+
+def get_groq_client():
+    global client
+
+    api_key = os.getenv("GROQ_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY is not set in environment variables.")
+
+    if client is None:
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://api.groq.com/openai/v1"
+        )
+
+    return client
 
 
 def is_allowed_file(filename):
@@ -123,21 +141,25 @@ def chunk_text(text, chunk_size=600, overlap=100):
 
 def load_csv(path):
     text = ""
+
     with open(path, encoding="utf-8", errors="ignore") as file:
         reader = csv.reader(file)
         for row in reader:
             text += " ".join(row) + " "
+
     return text
 
 
 def load_pdf(path):
     text = ""
+
     with open(path, "rb") as file:
         reader = PyPDF2.PdfReader(file)
         for page in reader.pages:
             page_text = page.extract_text()
             if page_text:
                 text += page_text + " "
+
     return text
 
 
@@ -198,13 +220,18 @@ def build_index_from_text(raw_text):
     if not documents:
         raise ValueError("The content is too small or could not be chunked properly.")
 
-    embeddings = embedder.encode(documents, normalize_embeddings=True)
+    embeddings = get_embedder().encode(documents, normalize_embeddings=True)
     embeddings = np.array(embeddings).astype("float32")
 
     index = faiss.IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
 
     save_index(index, documents)
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    return {"status": "ok"}, 200
 
 
 @app.route("/", methods=["GET"])
@@ -335,7 +362,7 @@ def ask():
         return redirect(url_for("home"))
 
     try:
-        query_embedding = embedder.encode([query], normalize_embeddings=True)
+        query_embedding = get_embedder().encode([query], normalize_embeddings=True)
         query_embedding = np.array(query_embedding).astype("float32")
 
         _, indexes = index.search(query_embedding, k=min(TOP_K, len(documents)))
@@ -369,7 +396,7 @@ def ask():
             prompt = FACT_PROMPT.format(context=context, question=query)
             temperature = 0.2
 
-        response = client.chat.completions.create(
+        response = get_groq_client().chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=temperature,
